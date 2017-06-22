@@ -1,0 +1,199 @@
+﻿﻿@model ClassLibrary.TableData
+@using Newtonsoft.Json
+@using ZpiProject.Helpers;
+@using ClassLibrary;
+
+
+
+<div class="row">
+    <form asp-action="ShowTable">
+        <div class="col-md-2 form-group">
+            <label for="startDate">Data poczatkowa:</label>
+            <input type="date" name="startDate" class="form-control" id="startDate"
+                   value="@((ViewBag.StartDate as DateTimeOffset?)?.ToString("yyyy-MM-dd"))">
+        </div>
+        <div class="col-md-2 form-group">
+            <label for="endDate">Data koncowa:</label>
+            <input type="date" name="endDate" class="form-control" id="endDate"
+                   value="@((ViewBag.EndDate as DateTimeOffset?)?.ToString("yyyy-MM-dd"))">
+        </div>
+
+        <div class="col-md-3 form-group">
+            <label for="stationId">StationId</label>
+            <select name="stationId" class="form-control" id="stationId">
+                @if (ViewBag.StationId == null)
+                {
+                    <option disabled selected> -- Wybierz stacje -- </option>
+                }
+
+                @{ foreach (var id in Model.StationDates.OrderBy(x => x.Value.StationName))
+                    {
+                        @if (ViewBag.StationId == id.Key)
+                        {
+                            <option value="@id.Key" selected>@id.Value.StationName</option>
+                        }
+                        else
+                        {
+                            <option value="@id.Key">@id.Value.StationName</option>
+                        }
+
+                    }
+                }
+            </select>
+        </div>
+        <div class="col-md-3 form-group">
+            <ul class="row" style="list-style-type: none" id="form-pollutions">
+                <li class="col-md-12">
+                    <input id="aqIndex" type="checkbox" name="filterElements" value="aqIndex"
+                           checked="@(ViewBag.StationId == null ||ViewBag.FilterElements.Contains("aqIndex") )"><label for="aqIndex"> Polski indeks jakości powietrza </label>
+                </li>
+                <li class="col-md-6">
+                    <input id="SO2" type="checkbox" name="filterElements" value="SO2"
+                           checked="@(ViewBag.StationId == null ||ViewBag.FilterElements.Contains("SO2") )"><label for="SO2" onclick="">SO<sub>2</sub></label>
+                </li>
+                <li class="col-md-6">
+                    <input id="PM10" type="checkbox" name="filterElements" value="PM10"
+                           checked="@(ViewBag.StationId == null ||ViewBag.FilterElements.Contains("PM10") )"><label for="PM10">pył PM10</label>
+                </li>
+                <li class="col-md-6">
+                    <input id="CO" type="checkbox" name="filterElements" value="CO"
+                           checked="@(ViewBag.StationId == null || ViewBag.FilterElements.Contains("CO") )"><label for="CO">CO</label>
+                </li>
+                <li class="col-md-6">
+                    <input id="PM2.5" type="checkbox" name="filterElements" value="PM2.5"
+                           checked="@(ViewBag.StationId == null ||ViewBag.FilterElements.Contains("PM2.5"))"><label for="PM2.5">pył PM2,5</label>
+                </li>
+                <li class="col-md-6">
+                    <input id="O3" type="checkbox" name="filterElements" value="O3"
+                           checked="@(ViewBag.StationId == null ||ViewBag.FilterElements.Contains("O3"))"><label for="O3">O<sub>3</sub></label>
+                </li>
+                <li class="col-md-6">
+                    <input id="NO2" type="checkbox" name="filterElements" value="NO2"
+                           checked="@(ViewBag.StationId == null || ViewBag.FilterElements.Contains("NO2") )"><label for="NO2">NO<sub>2</sub></label>
+                </li>
+                <li class="col-md-6">
+                    <input id="C6H6" type="checkbox" name="filterElements" value="C6H6"
+                           checked="@(ViewBag.StationId == null || ViewBag.FilterElements.Contains("C6H6") )"><label for="C6H6">benzen</label>
+                </li>
+            </ul>
+        </div>
+        <button type="submit" class="col-md-2 btn btn-primary">Szukaj</button>
+    </form>
+</div>
+
+@{ 
+    if(ViewBag.StationId != null)
+    {
+        <p>@Model.StationDates[ViewBag.StationId].StationName</p>
+
+<table class="table table-striped">
+    @{
+        var c6h6 = Model.HistoricalData.Any(m => m.C6H6 != null) && (ViewBag.StationId == null || (ViewBag.FilterElements as List<string>).Contains("C6H6"));
+        var pm10 = Model.HistoricalData.Any(m => m.PM10 != null) && (ViewBag.StationId == null || (ViewBag.FilterElements as List<string>).Contains("PM10"));
+        var so2 = Model.HistoricalData.Any(m => m.SO2 != null) && (ViewBag.StationId == null || (ViewBag.FilterElements as List<string>).Contains("SO2"));
+        var no2 = Model.HistoricalData.Any(m => m.NO2 != null) && (ViewBag.StationId == null || (ViewBag.FilterElements as List<string>).Contains("NO2"));
+        var co = Model.HistoricalData.Any(m => m.CO != null) && (ViewBag.StationId == null || (ViewBag.FilterElements as List<string>).Contains("CO"));
+        var pm25 = Model.HistoricalData.Any(m => m.PM25 != null) && (ViewBag.StationId == null || (ViewBag.FilterElements as List<string>).Contains("PM2.5"));
+        var o3 = Model.HistoricalData.Any(m => m.O3 != null) && (ViewBag.StationId == null || (ViewBag.FilterElements as List<string>).Contains("O3"));
+
+    <thead>
+        <tr>
+            <th>Data</th>
+            <th>Indeks jakości</th>
+
+
+            @if (c6h6)
+            {
+            <th>C6H6</th>
+            }
+            @if (pm10)
+            {
+                <th>PM10</th>
+            }
+            @if (so2)
+            {
+                <th>SO2</th>
+            }
+            @if (no2)
+            {
+                <th>NO2</th>
+            }
+            @if (co)
+            {
+                <th>CO</th>
+            }
+            @if (pm25)
+            {
+                <th>PM2.5</th>
+            }
+            @if (o3)
+            {
+                <th>O3</th>
+            }
+           
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var measurement in Model.HistoricalData)
+        {
+            <tr>
+                <td>@((measurement.Date as DateTimeOffset?)?.ToString("yyyy-MM-dd HH:00:00"))</td>
+                <td>@measurement.AqIndex</td>
+                @if (c6h6)
+                {
+                    <th>@measurement.C6H6</th>
+                }
+                @if (pm10)
+                {
+                    <th>@measurement.PM10</th>
+                }
+                @if (so2)
+                {
+                    <th>@measurement.SO2</th>
+                }
+                @if (no2)
+                {
+                    <th>@measurement.NO2</th>
+                }
+                @if (co)
+                {
+                    <th>@measurement.CO</th>
+                }
+                @if (pm25)
+                {
+                    <th>@measurement.PM25</th>
+                }
+                @if (o3)
+                {
+                    <th>@measurement.O3</th>
+                }
+
+            </tr>
+        }
+        
+
+    </tbody>
+    }
+</table>
+        }
+}
+
+
+@section Scripts{
+    <script>
+        window.model = @Html.Raw(JsonConvert.SerializeObject(Model, new JsonSerializerSettings
+                       {
+                           ContractResolver = new CamelCase()
+                       }));
+    </script>
+    <script src="~/js/chartView.js" asp-append-version="true"></script>
+}
+
+
+
+
+
+              
+
+
+

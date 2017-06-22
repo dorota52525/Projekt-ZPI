@@ -1,0 +1,9 @@
+diff a/MeasurementsSender/MeasurementsDataWorker.cs b/MeasurementsSender/MeasurementsDataWorker.cs	(rejected hunks)
+@@ -39,6 +39,7 @@
+                         var measurementJson = JsonConvert.SerializeObject(measurement);
+                         var queryString = new StringContent(measurementJson, Encoding.UTF8, "application/json");
+ 
++                        var saveResponse = await client.PostAsync("http://localhost:34471/save", queryString);
+                         saveResponse.EnsureSuccessStatusCode();
+                     }
+                     Console.WriteLine("Zakonczono wysylanie");

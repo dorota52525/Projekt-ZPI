@@ -1,0 +1,84 @@
+﻿﻿@model ClassLibrary.ChartData
+@using Newtonsoft.Json
+@using ZpiProject.Helpers;
+
+
+
+<div class="row">
+    <form asp-action="ShowChart">
+        <div class="col-md-2 form-group">
+            <label for="startDate">Data poczatkowa:</label>
+            <input type="date" name="startDate" class="form-control" id="startDate"
+                   value="@((ViewBag.StartDate as DateTimeOffset?)?.ToString("yyyy-MM-dd"))">
+        </div>
+        <div class="col-md-2 form-group">
+            <label for="endDate">Data koncowa:</label>
+            <input type="date" name="endDate" class="form-control" id="endDate"
+                   value="@((ViewBag.EndDate as DateTimeOffset?)?.ToString("yyyy-MM-dd"))">
+        </div>
+
+        <div class="col-md-3 form-group">
+            <label for="stationId">StationId</label>
+            <select name="stationId" class="form-control" id="stationId">
+                @if (ViewBag.StationId == null)
+                {
+                    <option disabled selected> -- Wybierz stacje -- </option>
+                }
+            
+                @{ foreach (var id in Model.StationDates.OrderBy(x => x.Value.StationName))
+                    {
+                        @if (ViewBag.StationId == id.Key)
+                        {
+                            <option value="@id.Key" selected>@id.Value.StationName</option>
+                        }
+                        else
+                        {
+                            <option value="@id.Key">@id.Value.StationName</option>
+                        }
+
+                    }
+                }
+            </select>
+        </div>
+        <div class="col-md-3 form-group">
+            <ul class="row" style="list-style-type: none" id="form-pollutions">
+                <li class="col-md-12"><input id="aqIndex" type="checkbox" name="filterElements" value="aqIndex" 
+                                             checked="@(ViewBag.FilterElements.Contains("aqIndex") || ViewBag.StationId == null)"><label for="aqIndex"> Polski indeks jakości powietrza </label></li>
+                <li class="col-md-6"><input id="SO2" type="checkbox" name="filterElements" value="SO2" 
+                                            checked="@(ViewBag.FilterElements.Contains("SO2") || ViewBag.StationId == null)"><label for="SO2" onclick="">SO<sub>2</sub></label></li>
+                <li class="col-md-6"><input id="PM10" type="checkbox" name="filterElements" value="PM10" 
+                                            checked="@(ViewBag.FilterElements.Contains("PM10") || ViewBag.StationId == null)"><label for="PM10">pył PM10</label></li>
+                <li class="col-md-6"><input id="CO" type="checkbox" name="filterElements" value="CO" 
+                                            checked="@(ViewBag.FilterElements.Contains("CO") || ViewBag.StationId == null)"><label for="CO">CO</label></li>
+                <li class="col-md-6"><input id="PM2.5" type="checkbox" name="filterElements" value="PM2.5" 
+                                            checked="@(ViewBag.FilterElements.Contains("PM2.5") || ViewBag.StationId == null)"><label for="PM2.5">pył PM2,5</label></li>
+                <li class="col-md-6"><input id="O3" type="checkbox" name="filterElements" value="O3" 
+                                            checked="@(ViewBag.FilterElements.Contains("O3") || ViewBag.StationId == null)"><label for="O3">O<sub>3</sub></label></li>
+                <li class="col-md-6"><input id="NO2" type="checkbox" name="filterElements" value="NO2" 
+                                            checked="@(ViewBag.FilterElements.Contains("NO2") || ViewBag.StationId == null)"><label for="NO2">NO<sub>2</sub></label></li>
+                <li class="col-md-6"><input id="C6H6" type="checkbox" name="filterElements" value="C6H6" 
+                                            checked="@(ViewBag.FilterElements.Contains("C6H6") || ViewBag.StationId == null)"><label for="C6H6">benzen</label></li>
+            </ul>
+        </div>
+        <button type="submit" class="col-md-2 btn btn-primary">Szukaj</button>
+    </form>
+</div>
+
+<div class="row" id="chart">
+    <div class="col-md-12">
+        <canvas id="myChart" height="100" width="300"></canvas>
+    </div>
+</div>
+
+
+@section Scripts{
+    <script>
+        window.model = @Html.Raw(JsonConvert.SerializeObject(Model, new JsonSerializerSettings
+                       {
+                           ContractResolver = new CamelCase()
+                       }));
+    </script>
+    <script src="~/lib/chart.js/dist/Chart.js"></script>
+    <script src="~/js/chartView.js" asp-append-version="true"></script>
+}
+
